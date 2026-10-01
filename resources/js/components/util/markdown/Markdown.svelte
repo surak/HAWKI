@@ -32,6 +32,7 @@
     import 'katex/dist/katex.min.css';
     import 'monaco-editor/min/vs/editor/editor.main.css';
     import 'markstream-svelte/index.css';
+    import {setContext} from 'svelte';
     import {useStore} from '$lib/app/hooks/useStore.svelte.js';
     import {useTranslator} from '$lib/app/hooks/useTranslator.svelte.js';
 
@@ -56,6 +57,8 @@
         message,
         isStreaming = false
     }: Props = $props();
+
+    setContext('markdownIsStreaming', () => isStreaming);
 
     // @see https://github.com/vitejs/vite/issues/13680
     function loadWorker(url: string) {
