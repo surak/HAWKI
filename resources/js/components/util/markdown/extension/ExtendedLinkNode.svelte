@@ -22,6 +22,7 @@
     import UrlPreviewTooltip from '$lib/components/ui/tooltip/UrlPreviewTooltip.svelte';
     import CitationReference from '$lib/components/ui/citations/CitationReference.svelte';
     import {CITATION_ANCHOR_PREFIX, citationIdFromAnchorId} from '$plugins/core/modules/chat/components/message/injectCitationsIntoMarkdown.js';
+    import {getContext} from 'svelte';
 
     interface Props {
         /** The parsed markdown link node (href, title, children, text). */
@@ -33,6 +34,9 @@
     }
 
     const {node, context, indexKey}: Props = $props();
+
+    const isStreamingGetter = getContext<(() => boolean) | undefined>('markdownIsStreaming');
+    const isStreaming = $derived(isStreamingGetter ? isStreamingGetter() : false);
 
     const href = $derived(String((node as any)?.href ?? ''));
     const title = $derived(String((node as any)?.title ?? '') || undefined);
@@ -96,13 +100,19 @@
         {@render linkContent()}
     </CitationReference>
 {:else if kind === 'external'}
-    <UrlPreviewTooltip url={href}>
-        {#snippet children({props})}
-            <TextLink {...props} href={href} target="_blank" title={title}>
-                {@render linkContent()}
-            </TextLink>
-        {/snippet}
-    </UrlPreviewTooltip>
+    {#if isStreaming}
+        <TextLink href={href} target="_blank" title={title} favicon={false}>
+            {@render linkContent()}
+        </TextLink>
+    {:else}
+        <UrlPreviewTooltip url={href}>
+            {#snippet children({props})}
+                <TextLink {...props} href={href} target="_blank" title={title}>
+                    {@render linkContent()}
+                </TextLink>
+            {/snippet}
+        </UrlPreviewTooltip>
+    {/if}
 {:else if kind === 'hash'}
     <TextLink href={href} title={title} onclick={(event) => scrollToHashTarget(event)}>
         {@render linkContent()}
